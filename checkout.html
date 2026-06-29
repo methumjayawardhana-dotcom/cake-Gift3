@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Checkout | Lumina</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Playfair+Display:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .checkout-grid {
+      display: grid;
+      grid-template-columns: 1fr 400px;
+      gap: 3rem;
+    }
+    .checkout-form-container {
+      background: var(--color-white);
+      padding: 2.5rem;
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-sm);
+    }
+    .form-section-title {
+      font-size: 1.5rem;
+      margin-bottom: 1.5rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 1px solid #eee;
+    }
+    .two-cols {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.5rem;
+    }
+    
+    /* Success Modal */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.5);
+      backdrop-filter: blur(5px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 2000;
+      opacity: 0;
+      pointer-events: none;
+      transition: var(--transition);
+    }
+    .modal-overlay.active {
+      opacity: 1;
+      pointer-events: all;
+    }
+    .modal {
+      background: var(--color-white);
+      padding: 3rem;
+      border-radius: var(--radius-lg);
+      text-align: center;
+      max-width: 400px;
+      transform: translateY(20px);
+      transition: var(--transition);
+    }
+    .modal-overlay.active .modal {
+      transform: translateY(0);
+    }
+    .modal i {
+      font-size: 4rem;
+      color: #52c41a;
+      margin-bottom: 1rem;
+    }
+  </style>
+</head>
+<body>
+
+  <header class="scrolled">
+    <div class="nav-container">
+      <a href="index.html" class="logo">
+        <i class="fas fa-crown"></i> Lumina
+      </a>
+      <div class="nav-actions">
+        <span>Secure Checkout <i class="fas fa-lock"></i></span>
+      </div>
+    </div>
+  </header>
+
+  <section class="section" style="padding-top: 8rem;">
+    <div class="checkout-grid">
+      <!-- Form Side -->
+      <div class="checkout-form-container">
+        <form id="checkout-form">
+          <h2 class="form-section-title">Delivery Details</h2>
+          <div class="two-cols">
+            <div class="form-group">
+              <label class="form-label">First Name</label>
+              <input type="text" class="form-control" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Last Name</label>
+              <input type="text" class="form-control" required>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Delivery Address</label>
+            <input type="text" class="form-control" required>
+          </div>
+          <div class="two-cols">
+            <div class="form-group">
+              <label class="form-label">Delivery Date</label>
+              <input type="date" class="form-control" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Phone Number</label>
+              <input type="tel" class="form-control" required>
+            </div>
+          </div>
+
+          <h2 class="form-section-title" style="margin-top: 2rem;">Personalization</h2>
+          <div class="form-group">
+            <label class="form-label">Message on Greeting Card (Optional)</label>
+            <textarea class="form-control" rows="3" placeholder="Write a sweet message..."></textarea>
+          </div>
+
+          <h2 class="form-section-title" style="margin-top: 2rem;">Payment</h2>
+          <div class="form-group">
+            <label class="form-label">Card Number</label>
+            <input type="text" class="form-control" placeholder="0000 0000 0000 0000" required>
+          </div>
+          <div class="two-cols">
+            <div class="form-group">
+              <label class="form-label">Expiry</label>
+              <input type="text" class="form-control" placeholder="MM/YY" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">CVC</label>
+              <input type="text" class="form-control" placeholder="123" required>
+            </div>
+          </div>
+          
+          <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 1.5rem; font-size: 1.1rem;">Place Order</button>
+        </form>
+      </div>
+
+      <!-- Summary Side -->
+      <div>
+        <div class="cart-summary" id="checkout-summary">
+          <!-- Injected via JS -->
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Success Modal -->
+  <div class="modal-overlay" id="success-modal">
+    <div class="modal">
+      <i class="fas fa-check-circle"></i>
+      <h2>Order Placed!</h2>
+      <p style="margin: 1rem 0;">Thank you for choosing Lumina. We'll start preparing your order immediately.</p>
+      <a href="index.html" class="btn btn-primary">Return Home</a>
+    </div>
+  </div>
+
+  <script src="js/products.js"></script>
+  <script src="js/app.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      if (cart.length === 0) {
+        window.location.href = 'shop.html';
+        return;
+      }
+
+      // Render summary
+      const summaryContainer = document.getElementById('checkout-summary');
+      let subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+      const delivery = 15.00;
+      
+      let html = `<h3>Order Summary</h3>`;
+      cart.forEach(item => {
+        html += `
+          <div class="summary-row" style="align-items: center; gap: 1rem; margin-bottom: 1.5rem;">
+            <div style="position: relative;">
+              <img src="${item.image}" style="width: 50px; height: 50px; border-radius: 8px; object-fit: cover;">
+              <span style="position: absolute; top: -8px; right: -8px; background: var(--color-primary); color: white; width: 20px; height: 20px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; font-weight: bold;">${item.quantity}</span>
+            </div>
+            <div style="flex-grow: 1; color: white;">${item.name}</div>
+            <div style="color: white; font-weight: 500;">${formatPrice(item.price * item.quantity)}</div>
+          </div>
+        `;
+      });
+
+      html += `
+        <div style="border-top: 1px solid rgba(255,255,255,0.1); padding-top: 1.5rem;">
+          <div class="summary-row">
+            <span>Subtotal</span>
+            <span>${formatPrice(subtotal)}</span>
+          </div>
+          <div class="summary-row">
+            <span>Delivery</span>
+            <span>${formatPrice(delivery)}</span>
+          </div>
+          <div class="summary-total">
+            <span>Total</span>
+            <span>${formatPrice(subtotal + delivery)}</span>
+          </div>
+        </div>
+      `;
+
+      summaryContainer.innerHTML = html;
+
+      // Handle Submit
+      document.getElementById('checkout-form').addEventListener('submit', (e) => {
+        e.preventDefault();
+        
+        // Show success modal
+        document.getElementById('success-modal').classList.add('active');
+        
+        // Clear cart
+        cart = [];
+        saveCart();
+      });
+    });
+  </script>
+</body>
+</html>
